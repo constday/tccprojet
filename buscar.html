@@ -155,15 +155,19 @@
             height: 100%;
             overflow: auto;
             background-color: rgba(0, 0, 0, 0.5);
-            padding: 50px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex; /* Mostrar quando a classe 'show' é adicionada */
         }
 
         .modal-content {
             background-color: #fff;
-            margin: auto;
             padding: 20px;
             border-radius: 10px;
-            width: 80%;
+            width: 90%;
             max-width: 600px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
             position: relative;
@@ -185,6 +189,36 @@
             text-decoration: none;
             cursor: pointer;
         }
+
+        @media screen and (max-width: 480px) {
+            .modal-content {
+                width: 95%;
+                padding: 15px;
+            }
+
+            .vaga-card {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .vaga-card img {
+                width: 80px;
+                height: 80px;
+            }
+
+            .vaga-card h2 {
+                font-size: 18px;
+            }
+
+            .vaga-card p {
+                font-size: 13px;
+            }
+
+            .vaga-card .btn {
+                font-size: 12px;
+                padding: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -198,13 +232,12 @@
             <button id="searchButton">Buscar</button>
         </div>
         <div class="vagas-container" id="vagasContainer">
-          
+            <!-- Cards de vagas aparecerão aqui -->
         </div>
         <div class="no-results" id="noResults">
             Nenhuma vaga encontrada para essa escola.
         </div>
     </div>
-
     <div id="vagaModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -285,35 +318,42 @@
         window.onload = () => carregarVagas();
 
         // Modal
-        const modal = document.getElementById("vagaModal");
-        const span = document.getElementsByClassName("close")[0];
+        document.addEventListener('DOMContentLoaded', () => {
+            const modal = document.getElementById("vagaModal");
+            const span = document.getElementsByClassName("close")[0];
 
-        document.addEventListener('click', function (e) {
-            if (e.target.classList.contains('btn')) {
-                e.preventDefault();
-                const vagaData = JSON.parse(e.target.getAttribute('data-vaga'));
-
-                // Preenche os dados no modal
+            // Função para abrir o modal
+            function openModal(vagaData) {
                 document.getElementById('modalTitulo').textContent = vagaData.nomeescola;
                 document.getElementById('modalDescricao').textContent = vagaData.descricaovaga;
                 document.getElementById('modalNivelEnsino').textContent = vagaData.nivelensino;
                 document.getElementById('modalLocalizacao').textContent = vagaData.localizacao;
                 document.getElementById('modalRequisitos').textContent = vagaData.requisitos || 'Não especificado';
 
-                modal.style.display = "block";
+                modal.classList.add("show");
+            }
+
+            // Event listener para os botões de detalhes
+            document.addEventListener('click', function (e) {
+                if (e.target.classList.contains('btn')) {
+                    e.preventDefault();
+                    const vagaData = JSON.parse(e.target.getAttribute('data-vaga'));
+                    openModal(vagaData);
+                }
+            });
+
+            // Fecha o modal quando clicar no "x"
+            span.onclick = function() {
+                modal.classList.remove("show");
+            }
+
+            // Fecha o modal quando clicar fora dele
+            window.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.classList.remove("show");
+                }
             }
         });
-
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
     </script>
 </body>
 </html>
-
