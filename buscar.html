@@ -143,6 +143,48 @@
             padding: 20px;
             display: none; /* Inicialmente escondido */
         }
+
+        /* Estilo para o modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1001;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 50px;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .close {
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            cursor: pointer;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -162,6 +204,19 @@
             Nenhuma vaga encontrada para essa escola.
         </div>
     </div>
+
+    <!-- Modal -->
+    <div id="vagaModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2 id="modalTitulo"></h2>
+            <p id="modalDescricao"></p>
+            <p><strong>Nível de Ensino:</strong> <span id="modalNivelEnsino"></span></p>
+            <p><strong>Localização:</strong> <span id="modalLocalizacao"></span></p>
+            <p><strong>Requisitos:</strong> <span id="modalRequisitos"></span></p>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
         import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
@@ -186,9 +241,7 @@
             searchInput = searchInput.toLowerCase().trim();
             
             try {
-                // Buscar todos os documentos da coleção "vagas"
                 const querySnapshot = await getDocs(collection(db, "vagas"));
-
                 vagasContainer.innerHTML = '';
                 let hasResults = false;
 
@@ -206,7 +259,7 @@
                                 <p><strong>Nível de Ensino:</strong> ${vagaData.nivelensino}</p>
                                 <p><strong>Localização:</strong> ${vagaData.localizacao}</p>
                                 <p>${vagaData.descricaovaga}</p>
-                                <a href="#" class="btn">Mais Detalhes</a>
+                                <a href="#" class="btn" data-vaga='${JSON.stringify(vagaData)}'>Mais Detalhes</a>
                             </div>
                         `;
                         vagasContainer.appendChild(vagaCard);
@@ -231,6 +284,36 @@
 
         // Carrega vagas ao iniciar a página
         window.onload = () => carregarVagas();
+
+        // Modal
+        const modal = document.getElementById("vagaModal");
+        const span = document.getElementsByClassName("close")[0];
+
+        document.addEventListener('click', function (e) {
+            if (e.target.classList.contains('btn')) {
+                e.preventDefault();
+                const vagaData = JSON.parse(e.target.getAttribute('data-vaga'));
+
+                // Preenche os dados no modal
+                document.getElementById('modalTitulo').textContent = vagaData.nomeescola;
+                document.getElementById('modalDescricao').textContent = vagaData.descricaovaga;
+                document.getElementById('modalNivelEnsino').textContent = vagaData.nivelensino;
+                document.getElementById('modalLocalizacao').textContent = vagaData.localizacao;
+                document.getElementById('modalRequisitos').textContent = vagaData.requisitos || 'Não especificado';
+
+                modal.style.display = "block";
+            }
+        });
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
     </script>
 </body>
 </html>
