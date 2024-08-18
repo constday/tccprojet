@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Busca de Vagas</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: #f4f4f9;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        nav {
+            width: 100%;
+            background-color: #4a148c;
+            padding: 15px 0;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 20px;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ffeb3b;
+        }
+
+        .container {
+            margin-top: 80px;
+            padding: 20px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .search-bar {
+            display: flex;
+            margin-bottom: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            overflow: hidden;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 12px;
+            font-size: 16px;
+            border: none;
+            outline: none;
+        }
+
+        .search-bar button {
+            padding: 12px;
+            font-size: 16px;
+            background-color: #4caf50;
+            color: #ffffff;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .search-bar button:hover {
+            background-color: #388e3c;
+        }
+
+        .vagas-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .vaga-card {
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            border: 1px solid #ddd;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .vaga-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .vaga-card img {
+            width: 100px;
+            height: 100px;
+            border-radius: 8px;
+        }
+
+        .vaga-card h2 {
+            font-size: 20px;
+            color: #333333;
+            margin-bottom: 10px;
+        }
+
+        .vaga-card p {
+            font-size: 14px;
+            color: #666666;
+            margin-bottom: 10px;
+        }
+
+        .vaga-card .btn {
+            padding: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            background-color: #4a148c;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, box-shadow 0.3s;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .vaga-card .btn:hover {
+            background-color: #6a1b9a;
+        }
+
+        .no-results {
+            text-align: center;
+            color: #999999;
+            font-size: 18px;
+            padding: 20px;
+            display: none; /* Inicialmente escondido */
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="login.html">Administrador 🔒</a>
+    </nav>
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" id="searchInput" placeholder="Buscar escola...">
+            <button id="searchButton">Buscar</button>
+        </div>
+        <div class="vagas-container" id="vagasContainer">
+            <!-- Vagas serão carregadas aqui -->
+        </div>
+        <div class="no-results" id="noResults">
+            Nenhuma vaga encontrada para essa escola.
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFewL9LpDcJJhli1Q6JRkRyqp-xW42eWY",
+            authDomain: "vagasprojet.firebaseapp.com",
+            projectId: "vagasprojet",
+            storageBucket: "vagasprojet.appspot.com",
+            messagingSenderId: "948527043002",
+            appId: "1:948527043002:web:78b4b56d944344ba378d83",
+            measurementId: "G-7CMTJSGDYC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function carregarVagas(searchInput = '') {
+            const vagasContainer = document.getElementById('vagasContainer');
+            const noResults = document.getElementById('noResults');
+            searchInput = searchInput.toLowerCase().trim();
+            
+            try {
+                // Buscar todos os documentos da coleção "vagas"
+                const querySnapshot = await getDocs(collection(db, "vagas"));
+
+                vagasContainer.innerHTML = '';
+                let hasResults = false;
+
+                querySnapshot.forEach((doc) => {
+                    const vagaData = doc.data();
+                    const nomeEscolaLower = vagaData.nomeescola.toLowerCase();
+
+                    if (nomeEscolaLower.includes(searchInput)) {
+                        const vagaCard = document.createElement('div');
+                        vagaCard.classList.add('vaga-card');
+                        vagaCard.innerHTML = `
+                            <img src="${vagaData.fotovaga}" alt="${vagaData.nomeescola}">
+                            <div>
+                                <h2>${vagaData.nomeescola}</h2>
+                                <p><strong>Nível de Ensino:</strong> ${vagaData.nivelensino}</p>
+                                <p><strong>Localização:</strong> ${vagaData.localizacao}</p>
+                                <p>${vagaData.descricaovaga}</p>
+                                <a href="#" class="btn">Mais Detalhes</a>
+                            </div>
+                        `;
+                        vagasContainer.appendChild(vagaCard);
+                        hasResults = true;
+                    }
+                });
+
+                noResults.style.display = hasResults ? 'none' : 'block';
+            } catch (error) {
+                console.error("Erro ao carregar vagas: ", error);
+                noResults.style.display = 'block';
+            }
+        }
+
+        function buscarVaga() {
+            const searchInput = document.getElementById('searchInput').value;
+            carregarVagas(searchInput);
+        }
+
+        // Adiciona o listener ao botão
+        document.getElementById('searchButton').addEventListener('click', buscarVaga);
+
+        // Carrega vagas ao iniciar a página
+        window.onload = () => carregarVagas();
+    </script>
+</body>
+</html>

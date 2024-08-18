@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área Administrativa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, #e3f2fd, #ffffff);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        nav {
+            width: 100%;
+            background-color: #3f51b5;
+            padding: 10px 0;
+            text-align: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ffd700;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 700px;
+            width: 100%;
+            margin-top: 80px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .vaga-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .vaga-form input,
+        .vaga-form select,
+        .vaga-form textarea,
+        .vaga-form input[type="file"] {
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+
+        .vaga-form textarea {
+            resize: vertical;
+            height: 120px;
+        }
+
+        .vaga-form .btn {
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            color: #ffffff;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+
+        .vaga-form .btn:hover {
+            background-color: #388e3c;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .vaga-item {
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .vaga-item img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            margin-right: 15px;
+        }
+
+        .vaga-item h2 {
+            font-size: 18px;
+            margin: 0;
+            color: #333;
+            flex: 1;
+        }
+
+        .vaga-item p {
+            margin: 0;
+            font-size: 14px;
+            color: #555;
+            flex: 1;
+        }
+
+        .delete-btn {
+            padding: 8px 12px;
+            background-color: #f44336;
+            color: #ffffff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+
+        @media (max-width: 600px) {
+            nav a {
+                display: block;
+                margin: 10px 0;
+            }
+
+            .container {
+                padding: 15px;
+                margin-top: 300px;
+            }
+
+            .vaga-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .vaga-item h2, .vaga-item p {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="admin.html">Área Administrativa 🔒</a>
+    </nav>
+    <div class="container">
+        <h1>Área Administrativa</h1>
+        <p>Bem-vindo, administrador! Aqui você pode cadastrar novas vagas escolares e visualizar as vagas cadastradas.</p>
+        
+        <!-- Formulário de cadastro de vaga -->
+        <form class="vaga-form" id="vagaForm">
+            <input type="text" id="nomeEscola" placeholder="Nome da Escola" required>
+            <select id="nivelEnsino" required>
+                <option value="" disabled selected>Selecione o Nível de Ensino</option>
+                <option value="infantil">Educação Infantil</option>
+                <option value="fundamental">Ensino Fundamental</option>
+                <option value="medio">Ensino Médio</option>
+            </select>
+            <textarea id="descricaoVaga" placeholder="Descrição da Vaga" required></textarea>
+            <input type="text" id="localizacao" placeholder="Localização" required>
+            <input type="file" id="fotoVaga" accept="image/*">
+            <button type="submit" class="btn">Cadastrar Vaga</button>
+        </form>
+        
+        <!-- Lista de vagas -->
+        <div class="vagas-list" id="vagasList">
+            <!-- As vagas cadastradas serão listadas aqui -->
+        </div>
+    </div>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, query, where, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFewL9LpDcJJhli1Q6JRkRyqp-xW42eWY",
+            authDomain: "vagasprojet.firebaseapp.com",
+            projectId: "vagasprojet",
+            storageBucket: "vagasprojet.appspot.com",
+            messagingSenderId: "948527043002",
+            appId: "1:948527043002:web:78b4b56d944344ba378d83",
+            measurementId: "G-7CMTJSGDYC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Função para buscar vagas
+        async function buscarVaga() {
+            const vagasList = document.getElementById('vagasList');
+            const escolaId = localStorage.getItem('escolaId');
+
+            if (!escolaId) {
+                vagasList.innerHTML = '<p>Você não está logado. Faça o login para acessar esta página.</p>';
+                return;
+            }
+
+            try {
+                const q = query(collection(db, "vagas"), where("escolaId", "==", escolaId));
+                const querySnapshot = await getDocs(q);
+                vagasList.innerHTML = '';
+
+                querySnapshot.forEach((doc) => {
+                    const vagaData = doc.data();
+                    const vagaItem = document.createElement('div');
+                    vagaItem.className = 'vaga-item';
+
+                    vagaItem.innerHTML = `
+                        <div style="display: flex; align-items: center;">
+                            <img src="${vagaData.fotovaga || 'default-image.jpg'}" alt="${vagaData.nomeescola}" style="width: 80px; height: 80px; border-radius: 8px; margin-right: 15px;">
+                            <div>
+                                <h2>${vagaData.nomeescola || 'Nome da Escola'}</h2>
+                                <p>Nível de Ensino: ${vagaData.nivelensino || 'Não especificado'}</p>
+                                <p>Descrição: ${vagaData.descricaovaga || 'Descrição não disponível'}</p>
+                                <p>Localização: ${vagaData.localizacao || 'Não especificada'}</p>
+                            </div>
+                        </div>
+                        <button class="delete-btn" onclick="deleteVaga('${doc.id}')">Excluir</button>
+                    `;
+
+                    vagasList.appendChild(vagaItem);
+                });
+            } catch (error) {
+                console.error("Erro ao buscar vagas: ", error);
+            }
+        }
+
+        // Função para cadastrar vaga
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+
+            const nomeEscola = document.getElementById("nomeEscola").value;
+            const nivelEnsino = document.getElementById("nivelEnsino").value;
+            const descricaoVaga = document.getElementById("descricaoVaga").value;
+            const localizacao = document.getElementById("localizacao").value;
+            const fotoVagaInput = document.getElementById("fotoVaga").files[0];
+
+            let fotoVaga = '';
+
+            if (fotoVagaInput) {
+                fotoVaga = await getBase64(fotoVagaInput);
+            }
+
+            const escolaId = localStorage.getItem('escolaId');
+
+            if (!escolaId) {
+                alert('Você não está logado. Faça o login para cadastrar uma vaga.');
+                return;
+            }
+
+            try {
+                await addDoc(collection(db, "vagas"), {
+                    nomeescola: nomeEscola,
+                    nivelensino: nivelEnsino,
+                    descricaovaga: descricaoVaga,
+                    localizacao: localizacao,
+                    fotovaga: fotoVaga,
+                    escolaId: escolaId
+                });
+                alert('Vaga cadastrada com sucesso!');
+                buscarVaga();
+            } catch (error) {
+                console.error("Erro ao cadastrar vaga: ", error);
+                alert('Erro ao cadastrar vaga. Tente novamente.');
+            }
+        }
+
+        // Função para excluir vaga
+        async function deleteVaga(vagaId) {
+            try {
+                await deleteDoc(doc(db, "vagas", vagaId));
+                alert('Vaga excluída com sucesso!');
+                buscarVaga();
+            } catch (error) {
+                console.error("Erro ao excluir vaga: ", error);
+                alert('Erro ao excluir vaga. Tente novamente.');
+            }
+        }
+
+        // Adiciona o listener ao formulário
+        document.getElementById('vagaForm').addEventListener('submit', handleFormSubmit);
+
+        // Função para converter arquivos em base64
+        function getBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+            });
+        }
+
+        // Faz a busca das vagas quando a página é carregada
+        document.addEventListener('DOMContentLoaded', buscarVaga);
+
+        // Expondo a função deleteVaga para o escopo global
+        window.deleteVaga = deleteVaga;
+    </script>
+</body>
+</html>

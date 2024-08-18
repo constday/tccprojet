@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro de Escolas</title>
+    <style>
+        /* Estilos gerais aplicáveis a todos os dispositivos */
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background: linear-gradient(135deg, white);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #333;
+            text-align: center;
+        }
+
+        nav {
+            width: 100%;
+            background-color: #3f51b5;
+            padding: 10px 0;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 24px;
+            color: #ffffff;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        nav a {
+            color: #ffffff;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 600;
+            transition: color 0.3s;
+        }
+
+        nav a:hover {
+            color: #ffd700;
+        }
+
+        .nav-links {
+            display: flex;
+        }
+
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            width: 100%;
+            margin-top: 100px; /* Espaço para o nav fixo */
+            transition: transform 0.3s ease-in-out;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            font-size: 28px;
+            color: #3f51b5;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: 600;
+            color: #333;
+            text-align: left;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        button {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin: 10px 0;
+            padding: 12px 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            background-color: #2196f3;
+            transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
+        }
+
+        button:hover {
+            background-color: #1976d2;
+        }
+
+        /* Estilos para telas de dispositivos móveis */
+        @media (max-width: 500px) {
+            .container {
+                padding: 30px 20px;
+                margin-top: 450px; /* Ajusta o espaço superior para dispositivos móveis */
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            input[type="text"],
+            input[type="password"] {
+                font-size: 14px;
+            }
+
+            button {
+                font-size: 16px;
+                padding: 12px 0;
+            }
+
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                align-items: center;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+        }
+
+        /* Estilos para telas de desktop */
+        @media (min-width: 501px) {
+            .container {
+                padding: 40px;
+                margin-top: 100px; /* Espaço superior maior para desktops */
+            }
+
+            button {
+                font-size: 18px;
+            }
+
+            .nav-links {
+                display: flex;
+            }
+
+            .menu-toggle {
+                display: none;
+            }
+        }
+    </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+        import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.13/firebase-firestore.js";
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyBFewL9LpDcJJhli1Q6JRkRyqp-xW42eWY",
+            authDomain: "vagasprojet.firebaseapp.com",
+            projectId: "vagasprojet",
+            storageBucket: "vagasprojet.appspot.com",
+            messagingSenderId: "948527043002",
+            appId: "1:948527043002:web:78b4b56d944344ba378d83",
+            measurementId: "G-7CMTJSGDYC"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("registerForm").addEventListener("submit", async function(event) {
+                event.preventDefault();
+
+                const nome = document.getElementById("nome").value;
+                const login = document.getElementById("login").value;
+                const senha = document.getElementById("senha").value;
+
+                try {
+                    await addDoc(collection(db, "escolas"), {
+                        nome: nome,
+                        login: login,
+                        senha: senha
+                    });
+                    alert("Escola cadastrada com sucesso!");
+                    document.getElementById("registerForm").reset();
+                } catch (error) {
+                    console.error("Erro ao cadastrar escola: ", error);
+                }
+            });
+        });
+    </script>
+</head>
+
+<body>
+    <nav>
+        <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="login.html">Administrador 🔒</a>
+        </div>
+    </nav>
+    <div class="container">
+        <h1>Cadastro de Escolas</h1>
+        <form id="registerForm">
+            <label for="nome">Nome da Escola:</label>
+            <input type="text" id="nome" required>
+            <label for="login">Login:</label>
+            <input type="text" id="login" required>
+            <label for="senha">Senha:</label>
+            <input type="password" id="senha" required>
+            <button type="submit">Cadastrar</button>
+        </form>
+    </div>
+
+    <script>
+        function toggleMenu() {
+            const menuLinks = document.querySelector('.nav-links');
+            menuLinks.classList.toggle('active');
+        }
+    </script>
+</body>
+
+</html>
+
+
+<body>
+    <nav>
+        <button class="menu-toggle" onclick="toggleMenu()"><i class="fas fa-bars"></i></button>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="login.html">Administrador 🔒</a>
+        </div>
+    </nav>
+    <script>
+        function toggleMenu() {
+            const menuLinks = document.querySelector('.nav-links');
+            menuLinks.classList.toggle('active');
+        }
+    </script>
+</body>
+
+</html>
